@@ -1,0 +1,12 @@
+# Flask is the web server framework
+Flask
+
+# Required for handling image data
+Pillow
+numpy
+
+# --- Machine Learning Libraries ---
+# Uncomment the ones you need for your models.
+# tensorflow
+# torch
+# onnxruntime
