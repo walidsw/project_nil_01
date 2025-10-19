@@ -1,101 +1,99 @@
 import 'package:flutter/material.dart';
-import 'modality_selection_screen.dart';
+import '../services/model_data_service.dart';
+import '../widgets/model_card.dart';
+import 'upload_screen.dart';
 
 class ModelListScreen extends StatelessWidget {
-  const ModelListScreen({super.key});
+  final String diseaseName;
+  final Modality modality;
 
-  final List<Map<String, dynamic>> models = const [
-    {
-      'name': 'Breast Cancer Classification',
-      'icon': '🩸',
-      'detail': 'Analyzes mammograms for early stage tumor detection.',
-      'modalities': ['Mammogram', 'Ultrasound', 'MRI Scan'],
-      'color': Color(0xFF2196F3), // Blue
-    },
-    {
-      'name': 'Glioma Tumor Segmentation',
-      'icon': '🧠',
-      'detail': 'Segments and classifies brain tumors from MRI scans.',
-      'modalities': ['MRI Scan', 'CT Scan'],
-      'color': Color(0xFFFF9800), // Orange
-    },
-    {
-      'name': 'Alzheimer\'s Progression Tracker',
-      'icon': '🧪',
-      'detail': 'Predicts disease stage based on patient data and brain scans.',
-      'modalities': ['MRI Scan', 'PET Scan'],
-      'color': Color(0xFF2196F3), // Blue
-    },
-    {
-      'name': 'Diabetic Retinopathy Detection',
-      'icon': '👁️',
-      'detail': 'Identifies signs of damage in retinal images.',
-      'modalities': ['Fundus Photography', 'OCT Scan'],
-      'color': Color(0xFFFF9800), // Orange
-    },
-  ];
+  const ModelListScreen({
+    super.key,
+    required this.diseaseName,
+    required this.modality,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final models = modality.models;
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.blue.shade100, // Add this line
-        title: const Text('Available Medical Models'),
-        centerTitle: false,
+        title: const Text("Step 3: Select Model"),
       ),
-      body: Padding(
-        padding: const EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
-        child: ListView.builder(
-          itemCount: models.length,
-          itemBuilder: (context, index) {
-            final model = models[index];
-            final cardColor = model['color'] as Color;
-
-            return SizedBox(
-              height: 150, // Fixed height for all cards
-              child: Card(
-                color: cardColor.withValues(alpha: 0.05),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    backgroundColor: cardColor.withValues(alpha: 0.2),
-                    child: Text(
-                      model['icon']! as String,
-                      style: const TextStyle(fontSize: 24),
+      body: Column(
+        children: [
+          // "Use All" Button
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.select_all),
+              label: Text("Analyze with all ${modality.name} models"),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UploadScreen(
+                      modelName: "All ${modality.name} Models",
+                      modelDescription: "Upload an image to run analysis against all available models for this modality.",
+                      modalityName: modality.name,
                     ),
                   ),
-                  title: Text(
-                    model['name']! as String,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  subtitle: Padding(
-                    padding: const EdgeInsets.only(top: 4.0),
-                    child: Text(
-                      model['detail']! as String,
-                      style: TextStyle(color: Colors.grey.shade600),
-                      maxLines: 2, // Limit to 2 lines
-                      overflow: TextOverflow.ellipsis, // Add ellipsis if text is too long
-                    ),
-                  ),
-                  trailing: Icon(Icons.chevron_right, color: cardColor),
+                );
+              },
+            ),
+          ),
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(child: Divider()),
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 8.0),
+                  child: Text("OR", style: TextStyle(color: Colors.grey)),
+                ),
+                Expanded(child: Divider()),
+              ],
+            ),
+          ),
+          // Grid of individual models
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 400.0,
+                childAspectRatio: 1.1,
+                crossAxisSpacing: 20.0,
+                mainAxisSpacing: 20.0,
+              ),
+              itemCount: models.length,
+              itemBuilder: (context, index) {
+                final model = models[index];
+                return ModelCard(
+                  title: model.name,
+                  description: model.description,
+                  icon: Icons.biotech, // Generic icon for models
                   onTap: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ModalitySelectionScreen(
-                          modelName: model['name']! as String,
-                          modelDescription: model['detail']! as String,
-                          availableModalities: model['modalities']! as List<String>,
+                        builder: (context) => UploadScreen(
+                          modelName: model.name,
+                          modelDescription: model.description,
+                          modalityName: modality.name,
                         ),
                       ),
                     );
                   },
-                ),
-              ),
-            );
-          },
-        ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

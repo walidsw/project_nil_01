@@ -1,7 +1,9 @@
+import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'result_screen.dart';
+import 'multi_model_result_screen.dart'; // Import the new screen
+import 'single_model_result_screen.dart'; // Add this import at the top
 
 class UploadScreen extends StatefulWidget {
   final String modelName;
@@ -21,22 +23,22 @@ class UploadScreen extends StatefulWidget {
 }
 
 class _UploadScreenState extends State<UploadScreen> {
-  File? _imageFile;
+  XFile? _imageFile;
+  bool _isAnalyzing = false; // Add state for loading indicator
   final ImagePicker _picker = ImagePicker();
-  bool _isLoading = false;
 
   // --- Image Picking Logic ---
-  Future<void> _pickImage({ImageSource source = ImageSource.gallery}) async {
+  Future<void> _pickImage() async {
     try {
       final pickedFile = await _picker.pickImage(
-        source: source,
+        source: ImageSource.gallery,
         imageQuality: 85,
         maxWidth: 1024,
         maxHeight: 1024,
       );
       if (pickedFile != null) {
         setState(() {
-          _imageFile = File(pickedFile.path);
+          _imageFile = pickedFile;
         });
       }
     } catch (e) {
@@ -70,80 +72,117 @@ class _UploadScreenState extends State<UploadScreen> {
     }
   }
 
-  // --- Show Image Source Options ---
-  void _showImageSourceDialog() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Photo Library'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _pickImage(source: ImageSource.gallery);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Camera'),
-                onTap: () {
-                  Navigator.of(context).pop();
-                  _pickImage(source: ImageSource.camera);
-                },
-              ),
-            ],
-          ),
-        );
-      },
+  // --- NEW: Simulate multi-model analysis ---
+  Future<void> _runMultiModelAnalysis() async {
+    if (_imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select an image first!")),
+      );
+      return;
+    }
+
+    setState(() => _isAnalyzing = true);
+
+    // Simulate network delay and analysis
+    await Future.delayed(const Duration(seconds: 3));
+
+    // --- Generate Dummy Results ---
+    final models = ["ResNet50", "VGG16", "InceptionV3"];
+    final predictions = ["Positive", "Negative"];
+    final random = Random();
+    final List<SingleModelResult> individualResults = models.map((modelName) {
+      return SingleModelResult(
+        modelName: modelName,
+        prediction: predictions[random.nextInt(predictions.length)],
+        confidence: 0.85 + random.nextDouble() * 0.14, // 85% to 99%
+        paperUrl: "https://arxiv.org/abs/1512.03385", // Dummy paper link
+      );
+    }).toList();
+
+    // Calculate average result
+    final double avgConfidence = individualResults.map((r) => r.confidence).reduce((a, b) => a + b) / individualResults.length;
+    final String overallPrediction = individualResults.map((r) => r.prediction).fold<Map<String, int>>({}, (map, pred) {
+      map[pred] = (map[pred] ?? 0) + 1;
+      return map;
+    }).entries.reduce((a, b) => a.value > b.value ? a : b).key;
+
+    final analysisResult = MultiModelAnalysisResult(
+      overallPrediction: overallPrediction,
+      averageConfidence: avgConfidence,
+      individualResults: individualResults,
     );
+    // --- End of Dummy Data Generation ---
+
+    setState(() => _isAnalyzing = false);
+
+    // Navigate to the new results screen
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MultiModelResultScreen(analysisResult: analysisResult),
+        ),
+      );
+    }
   }
 
-  // --- Model Run Placeholder ---
-  Future<void> _runModelAndNavigate() async {
-    if (_imageFile == null) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    // --- Placeholder for ML Model Execution (Simulated Delay) ---
+  // --- Simulate single-model analysis ---
+  Future<void> _runSingleModelAnalysis() async {
+    if (_imageFile == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please select an image first!")),
+      );
+      return;
+    }
+    
+    setState(() => _isAnalyzing = true);
+    
+    // Simulate network delay and analysis
     await Future.delayed(const Duration(seconds: 2));
-
-    setState(() {
-      _isLoading = false;
-    });
-
-    // Check if widget is still mounted before navigation
-    if (!mounted) return;
-
+    
+    // Generate dummy result
+    final random = Random();
+    final predictions = ["Positive", "Negative", "Uncertain"];
+    final prediction = predictions[random.nextInt(predictions.length)];
+    final confidence = 0.85 + random.nextDouble() * 0.14; // 85% to 99%
+    
+    setState(() => _isAnalyzing = false);
+    
     // Navigate to result screen
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => ResultScreen(
-          modelName: widget.modelName,
-          imageFile: _imageFile!,
-          modelResult: "Malignant (94.5% Confidence)",
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SingleModelResultScreen(
+            modelName: widget.modelName,
+            prediction: prediction,
+            confidence: confidence,
+            paperUrl: "https://arxiv.org/abs/1512.03385", // Dummy paper URL
+            imagePath: _imageFile!.path,
+          ),
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+
+    // Use a smaller portion of the screen for the image preview
+    final double imageHeight = screenHeight * 0.3; 
+    // Make padding responsive
+    final double horizontalPadding = screenWidth > 600 ? 40.0 : 16.0;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.modelName),
-        backgroundColor: Colors.blue.shade100,
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -176,77 +215,66 @@ class _UploadScreenState extends State<UploadScreen> {
             ),
             const SizedBox(height: 24),
 
-            // --- Image Preview Area ---
-            Container(
-              height: 250,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade300, width: 2),
-              ),
-              child: Center(
-                child: _imageFile != null
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.file(
-                          _imageFile!,
-                          height: 250,
-                          fit: BoxFit.cover,
+            // --- Image Preview Area (NOW TAPPABLE) ---
+            GestureDetector(
+              onTap: _pickImage, // This makes the area tappable
+              child: Container(
+                height: imageHeight, // Use dynamic height
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade300, width: 2),
+                ),
+                child: Center(
+                  child: _imageFile != null
+                      ? ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.file(
+                            File(_imageFile!.path),
+                            height: imageHeight, // Use dynamic height
+                            width: double.infinity,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.add_photo_alternate_outlined, // Changed icon
+                              size: 48,
+                              color: Colors.grey.shade400,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Tap to select an image (${widget.modalityName})", // Updated text
+                              style: TextStyle(color: Colors.grey.shade500),
+                            ),
+                          ],
                         ),
-                      )
-                    : Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.image,
-                            size: 48,
-                            color: Colors.grey.shade400,
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "Select an image file (${widget.modalityName})",
-                            style: TextStyle(color: Colors.grey.shade500),
-                          ),
-                        ],
-                      ),
+                ),
               ),
             ),
             const SizedBox(height: 32),
-
-            // --- Pick Image Button ---
-            ElevatedButton.icon(
-              onPressed: _showImageSourceDialog,
-              icon: const Icon(Icons.add_photo_alternate),
-              label: const Text("Select Image"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primaryColor,
-                foregroundColor: Colors.white,
+            if (_isAnalyzing)
+              const Center(child: CircularProgressIndicator())
+            else
+              ElevatedButton.icon(
+                onPressed: () {
+                  // Check if this is a multi-model analysis
+                  if (widget.modelName.contains("All")) {
+                    _runMultiModelAnalysis();
+                  } else {
+                    _runSingleModelAnalysis();
+                  }
+                },
+                icon: const Icon(Icons.biotech),
+                label: const Text("Analyze Image"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: theme.primaryColor,
+                  foregroundColor: Colors.white,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-
-            // --- Upload and Run Button ---
-            ElevatedButton(
-              onPressed: _imageFile == null || _isLoading
-                  ? null
-                  : _runModelAndNavigate,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _imageFile == null
-                    ? Colors.grey
-                    : theme.colorScheme.secondary,
-                foregroundColor: Colors.white,
-              ),
-              child: _isLoading
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 3,
-                      ),
-                    )
-                  : const Text("Analyze & Get Prediction"),
-            ),
           ],
         ),
       ),

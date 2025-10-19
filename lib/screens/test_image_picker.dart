@@ -1,6 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
 class TestImagePicker extends StatefulWidget {
   const TestImagePicker({super.key});
@@ -10,42 +10,19 @@ class TestImagePicker extends StatefulWidget {
 }
 
 class _TestImagePickerState extends State<TestImagePicker> {
-  File? _image;
+  File? _imageFile;
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
-    print('=== STARTING IMAGE PICK ===');
     try {
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-      print('=== IMAGE PICK RESULT: ${image?.path} ===');
-
-      if (image != null) {
+      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
         setState(() {
-          _image = File(image.path);
+          _imageFile = File(pickedFile.path);
         });
-        print('=== IMAGE SET SUCCESSFULLY ===');
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('✅ Image loaded successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        print('=== NO IMAGE SELECTED ===');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('❌ No image selected'),
-            backgroundColor: Colors.orange,
-          ),
-        );
       }
     } catch (e) {
-      print('=== ERROR: $e ===');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ Error: $e'), backgroundColor: Colors.red),
-      );
+      debugPrint('Image pick error: $e');
     }
   }
 
@@ -53,54 +30,23 @@ class _TestImagePickerState extends State<TestImagePicker> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Image Picker Test'),
-        backgroundColor: Colors.blue,
+        title: const Text('Test Image Picker'),
       ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Image display
-            Container(
-              width: 200,
-              height: 200,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: _image != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: Image.file(_image!, fit: BoxFit.cover),
-                    )
-                  : const Center(child: Text('No Image')),
-            ),
+            if (_imageFile != null)
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Image.file(_imageFile!, height: 300),
+              )
+            else
+              const Text('No image selected.'),
             const SizedBox(height: 20),
-
-            // Pick button
-            ElevatedButton.icon(
+            ElevatedButton(
               onPressed: _pickImage,
-              icon: const Icon(Icons.photo_library),
-              label: const Text('Pick Image'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 10,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Status text
-            Text(
-              _image != null ? '✅ Image loaded!' : 'No image selected',
-              style: TextStyle(
-                color: _image != null ? Colors.green : Colors.grey,
-                fontWeight: FontWeight.bold,
-              ),
+              child: const Text('Pick Image from Gallery'),
             ),
           ],
         ),
