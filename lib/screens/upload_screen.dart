@@ -6,7 +6,8 @@ import 'result_screen.dart';
 class UploadScreen extends StatefulWidget {
   final String modelName;
   final String modelDescription;
-  final String modalityName; // New parameter to show input type (e.g., MRI, X-Ray)
+  final String
+  modalityName; // New parameter to show input type (e.g., MRI, X-Ray)
 
   const UploadScreen({
     super.key,
@@ -25,9 +26,14 @@ class _UploadScreenState extends State<UploadScreen> {
   bool _isLoading = false;
 
   // --- Image Picking Logic ---
-  Future<void> _pickImage() async {
+  Future<void> _pickImage({ImageSource source = ImageSource.gallery}) async {
     try {
-      final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+      final pickedFile = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1024,
+        maxHeight: 1024,
+      );
       if (pickedFile != null) {
         setState(() {
           _imageFile = File(pickedFile.path);
@@ -35,8 +41,64 @@ class _UploadScreenState extends State<UploadScreen> {
       }
     } catch (e) {
       debugPrint('Image pick error: $e');
-      // In a real app, show a snackbar or alert here
+      if (mounted) {
+        String errorMessage = 'Error selecting image';
+        if (e.toString().contains('Permission')) {
+          errorMessage =
+              'Permission denied. Please allow photo access in Settings.';
+        } else if (e.toString().contains('No photos')) {
+          errorMessage = 'No photos found in gallery.';
+        } else {
+          errorMessage = 'Error: ${e.toString()}';
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
+            action: SnackBarAction(
+              label: 'Settings',
+              textColor: Colors.white,
+              onPressed: () {
+                // Could open app settings here
+              },
+            ),
+          ),
+        );
+      }
     }
+  }
+
+  // --- Show Image Source Options ---
+  void _showImageSourceDialog() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: [
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Photo Library'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(source: ImageSource.gallery);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Camera'),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _pickImage(source: ImageSource.camera);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   // --- Model Run Placeholder ---
@@ -64,7 +126,7 @@ class _UploadScreenState extends State<UploadScreen> {
         builder: (_) => ResultScreen(
           modelName: widget.modelName,
           imageFile: _imageFile!,
-          modelResult: "Malignant (94.5% Confidence)", 
+          modelResult: "Malignant (94.5% Confidence)",
         ),
       ),
     );
@@ -73,11 +135,11 @@ class _UploadScreenState extends State<UploadScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.modelName),
-        backgroundColor: Colors.blue.shade100, 
+        backgroundColor: Colors.blue.shade100,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -88,7 +150,9 @@ class _UploadScreenState extends State<UploadScreen> {
           children: [
             // --- Model Information Card ---
             Card(
-              color: theme.primaryColor.withValues(alpha: 0.05), // Changed from withOpacity
+              color: theme.primaryColor.withValues(
+                alpha: 0.05,
+              ), // Changed from withOpacity
               elevation: 0,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -97,7 +161,9 @@ class _UploadScreenState extends State<UploadScreen> {
                   children: [
                     Text(
                       "Input Required: ${widget.modalityName}",
-                      style: theme.textTheme.titleMedium?.copyWith(color: theme.primaryColor),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.primaryColor,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -131,7 +197,11 @@ class _UploadScreenState extends State<UploadScreen> {
                     : Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.image, size: 48, color: Colors.grey.shade400),
+                          Icon(
+                            Icons.image,
+                            size: 48,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 8),
                           Text(
                             "Select an image file (${widget.modalityName})",
@@ -145,9 +215,9 @@ class _UploadScreenState extends State<UploadScreen> {
 
             // --- Pick Image Button ---
             ElevatedButton.icon(
-              onPressed: _pickImage,
-              icon: const Icon(Icons.photo_library),
-              label: const Text("Select Image from Gallery"),
+              onPressed: _showImageSourceDialog,
+              icon: const Icon(Icons.add_photo_alternate),
+              label: const Text("Select Image"),
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.primaryColor,
                 foregroundColor: Colors.white,
@@ -157,9 +227,13 @@ class _UploadScreenState extends State<UploadScreen> {
 
             // --- Upload and Run Button ---
             ElevatedButton(
-              onPressed: _imageFile == null || _isLoading ? null : _runModelAndNavigate,
+              onPressed: _imageFile == null || _isLoading
+                  ? null
+                  : _runModelAndNavigate,
               style: ElevatedButton.styleFrom(
-                backgroundColor: _imageFile == null ? Colors.grey : theme.colorScheme.secondary,
+                backgroundColor: _imageFile == null
+                    ? Colors.grey
+                    : theme.colorScheme.secondary,
                 foregroundColor: Colors.white,
               ),
               child: _isLoading

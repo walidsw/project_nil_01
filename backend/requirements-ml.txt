@@ -1,0 +1,6 @@
+# ML-specific dependencies (install after basic requirements)
+tensorflow==2.16.1
+torch==2.1.1
+torchvision==0.16.1
+opencv-python==4.8.1.78
+scikit-learn==1.3.2

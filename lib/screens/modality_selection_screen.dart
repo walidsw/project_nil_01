@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'upload_screen.dart';  // Same folder
+import 'simple_upload_screen.dart';  // Same folder
 
 class ModalitySelectionScreen extends StatelessWidget {
   final String modelName;
@@ -154,7 +154,7 @@ class ModalitySelectionScreen extends StatelessWidget {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => UploadScreen(
+              builder: (context) => SimpleUploadScreen(
                 modelName: modelName,
                 modelDescription: modelDescription,
                 modalityName: modalityName,

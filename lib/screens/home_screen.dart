@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'model_list_screen.dart';
+import 'test_image_picker.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -7,13 +8,21 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blue.shade100, // Add this line
         foregroundColor: Colors.white, // Add this line for white text/icons
         title: const Text('Medical ML Platform'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.photo_camera),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const TestImagePicker()),
+            ),
+            tooltip: 'Test Image Picker',
+          ),
           IconButton(
             icon: const Icon(Icons.info_outline),
             onPressed: () => _showAboutDialog(context),
@@ -30,22 +39,22 @@ class HomeScreen extends StatelessWidget {
               children: [
                 // Hero Section
                 _buildHeroSection(context, theme),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Features Grid
                 _buildFeaturesGrid(context, theme),
-                
+
                 const SizedBox(height: 32),
-                
+
                 // Main Action Button
                 _buildMainActionButton(context, theme),
-                
+
                 const SizedBox(height: 24),
-                
+
                 // Statistics Section
                 _buildStatisticsSection(context, theme),
-                
+
                 const SizedBox(height: 16),
               ],
             ),
@@ -72,11 +81,7 @@ class HomeScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.local_hospital,
-            size: 48,
-            color: theme.primaryColor,
-          ),
+          Icon(Icons.local_hospital, size: 48, color: theme.primaryColor),
           const SizedBox(height: 16),
           Text(
             'AI-Powered Medical Diagnostics',
@@ -138,7 +143,7 @@ class HomeScreen extends StatelessWidget {
       itemBuilder: (context, index) {
         final feature = features[index];
         final cardColor = feature['color'] as Color;
-        
+
         return Card(
           color: cardColor.withValues(alpha: 0.1),
           elevation: 2,
@@ -147,11 +152,7 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  feature['icon'] as IconData,
-                  size: 36,
-                  color: cardColor,
-                ),
+                Icon(feature['icon'] as IconData, size: 36, color: cardColor),
                 const SizedBox(height: 12),
                 Text(
                   feature['title'] as String,
@@ -182,16 +183,11 @@ class HomeScreen extends StatelessWidget {
       onPressed: () {
         Navigator.push(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ModelListScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const ModelListScreen()),
         );
       },
       icon: const Icon(Icons.rocket_launch, size: 24),
-      label: const Text(
-        'Start Analysis',
-        style: TextStyle(fontSize: 18),
-      ),
+      label: const Text('Start Analysis', style: TextStyle(fontSize: 18)),
       style: ElevatedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 16),
         elevation: 4,
@@ -247,10 +243,7 @@ class HomeScreen extends StatelessWidget {
                 style: TextStyle(height: 1.5),
               ),
               SizedBox(height: 16),
-              Text(
-                'Features:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
+              Text('Features:', style: TextStyle(fontWeight: FontWeight.bold)),
               SizedBox(height: 8),
               Text('• Multiple specialized ML models'),
               Text('• Fast and accurate predictions'),
@@ -259,10 +252,7 @@ class HomeScreen extends StatelessWidget {
               SizedBox(height: 16),
               Text(
                 'Version 1.0.0',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 12, color: Colors.grey),
               ),
             ],
           ),

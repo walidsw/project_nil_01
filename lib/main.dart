@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'screens/home_screen.dart';  // Updated path
+import 'screens/home_screen.dart'; // Updated path
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,10 +27,10 @@ class MedicalMLPlatform extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(
         seedColor: _primaryColor,
         secondary: _secondaryColor,
-        surface: Colors.white,  // Changed from background to surface
+        surface: Colors.white, // Changed from background to surface
       ),
       scaffoldBackgroundColor: Colors.white,
-      
+
       // AppBar Theme
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.white,
@@ -51,18 +51,15 @@ class MedicalMLPlatform extends StatelessWidget {
         elevation: 1.5,
         surfaceTintColor: Colors.white,
         color: Colors.white,
-        shadowColor: Colors.black.withOpacity(0.1),
+        shadowColor: Colors.black.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(_defaultBorderRadius),
           side: BorderSide(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             width: 0.5,
           ),
         ),
-        margin: const EdgeInsets.symmetric(
-          vertical: 4,
-          horizontal: 8,
-        ),
+        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         clipBehavior: Clip.antiAlias,
       ),
 
@@ -72,10 +69,7 @@ class MedicalMLPlatform extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(_defaultBorderRadius),
           ),
-          padding: const EdgeInsets.symmetric(
-            vertical: 12,
-            horizontal: 24,
-          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 24),
           backgroundColor: _primaryColor,
           foregroundColor: Colors.white,
           textStyle: const TextStyle(
@@ -92,7 +86,10 @@ class MedicalMLPlatform extends StatelessWidget {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(_defaultBorderRadius),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         filled: true,
         fillColor: Colors.grey[50],
       ),
